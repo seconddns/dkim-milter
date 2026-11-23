@@ -35,3 +35,5 @@ Everything about running it is on [doc.yarilomail.org](https://doc.yarilomail.or
 ## Development and release
 
 Work lands on `develop` through pull requests, with Lint and Test green; `main` takes releases only. `develop` carries `-dev.N` in `helm/Chart.yaml`, bumped in the PR that changes the image, and each merge builds the image in GHCR. A merge into `main` with a release version publishes `<version>` and `latest` to GHCR and Docker Hub and creates the release `v<version>`.
+
+A release keeps `main` inside `develop`: a pull request into `develop` sets the release version, a pull request from `develop` into `main` is merged with a merge commit (not squash or rebase), and the next pull request into `develop` starts the next `-dev.1`. No release branch, and no commit lands on `main` that `develop` does not have.

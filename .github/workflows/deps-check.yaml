@@ -32,7 +32,10 @@ jobs:
           # by a dependency's go.mod and never built here: those cannot be
           # upgraded from this repo. List the modules actually reachable instead.
           MODS=$(go list -deps -test -f '{{with .Module}}{{.Path}}{{end}}' ./... 2>/dev/null | sort -u | grep -v '^$')
-          UPDATES=$(go list -m -u $MODS 2>/dev/null | grep '\[' || true)
+          # modernc.org/libc and memory stay at the versions modernc.org/sqlite's
+          # go.mod requires (TestSqliteLibcPinned) and move only with it.
+          UPDATES=$(go list -m -u $MODS 2>/dev/null | grep '\[' \
+            | grep -vE '^modernc\.org/(libc|memory) ' || true)
           if [ -z "$UPDATES" ]; then
             echo "has_updates=false" >> "$GITHUB_OUTPUT"
           else

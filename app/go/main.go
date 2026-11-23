@@ -95,7 +95,7 @@ func waitReady(ctx context.Context, fetch func(context.Context, string) (row, bo
 func newMilterServer(cfg config, cache *keyCache) *milter.Server {
 	return &milter.Server{
 		NewMilter: func() milter.Milter {
-			return &session{keys: cache, signAuth: cfg.signAuth, signDomain: cfg.signDomain, hopsBefore: cfg.signHopsBefore}
+			return &session{keys: cache, signAuth: cfg.signAuth, signDomain: cfg.signDomain, hopsBefore: cfg.signHopsBefore, policy: cfg.policy}
 		},
 		Actions:  milter.OptAddHeader,
 		Protocol: milter.OptNoConnect | milter.OptNoHelo | milter.OptNoRcptTo,

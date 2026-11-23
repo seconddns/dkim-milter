@@ -61,6 +61,9 @@ type config struct {
 	// signHopsBefore is SIGN_HOPS_BEFORE: the Postfix hops between yarilo and
 	// this signer, whose Received every message brings.
 	signHopsBefore int
+	// policy is SIGN_HEADERS, OMIT_HEADERS, OVERSIGN_HEADERS and
+	// CANONICALIZATION.
+	policy *headerPolicy
 }
 
 // defaultQueries read one domain's newest row, the domain compared without
@@ -159,6 +162,10 @@ func loadConfig() (config, error) {
 		return c, fmt.Errorf("config: SIGN_DOMAIN %q: a domain name", c.signDomain)
 	}
 	if c.signHopsBefore, err = nonNegative("SIGN_HOPS_BEFORE", defaultSignHopsBefore); err != nil {
+		return c, err
+	}
+	if c.policy, err = newHeaderPolicy(env("SIGN_HEADERS", defaultSignHeaders), env("OMIT_HEADERS", defaultOmitHeaders),
+		env("OVERSIGN_HEADERS", defaultOversignHeaders), env("CANONICALIZATION", defaultCanonicalization)); err != nil {
 		return c, err
 	}
 	def, ok := defaultQueries[c.dbDriver]

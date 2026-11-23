@@ -1,0 +1,28 @@
+# SecondDNS production: the relay's Postfix (seconddns/k8s_relay) in namespace
+# relay runs the milter. Keys in the PostgreSQL table dkim (database dkim in
+# namespace db), private keys as Vault Transit ciphertext. The DSN Secret
+# dkim-milter-db comes from Vault through the ExternalSecret in k8s_relay.
+db:
+  driver: postgres
+  dsnSecret:
+    name: dkim-milter-db
+    key: DB_DSN
+
+keyDecrypt: vault
+
+vault:
+  addr: "http://vault.vault.svc:8200"
+  role: dkim-milter
+
+# The short list SecondDNS signed before; From is signed and oversigned on its
+# own. Signing To, Reply-To or the MIME fields sent its mail to spam.
+signHeaders: "Date,Message-ID,Subject,X-Msg-Src,X-MF-Envelope-From"
+canonicalization: "relaxed/simple"
+
+# Calico enforces it; only the relay's Postfix pods reach the milter.
+networkPolicy:
+  enabled: true
+  postfix:
+    podSelector:
+      matchLabels:
+        app: relay

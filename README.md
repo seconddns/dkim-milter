@@ -8,7 +8,7 @@ Licensed under **AGPLv3**, see [LICENSE](LICENSE). **Website:** [yarilomail.org]
 
 ## What it does
 
-- Signs each message with the DKIM key of its `From:` domain, RSA or Ed25519, `relaxed/simple`, `From` oversigned.
+- Signs each message with the DKIM key of its `From:` domain, RSA or Ed25519, `relaxed/simple` by default. The header fields signed, never signed and oversigned, and the canonicalization, are chart values; a field is signed only when the message has it, and `From` is always signed and guarded against one added later.
 - Signs only for a client that logged in with SASL: by default a login of the `From:` domain.
 - Signs a forwarded message (a Sieve `redirect`) with the forwarder's own domain instead of the author's.
 - Reads keys per domain from a `dkim` table in PostgreSQL or MySQL, private keys encrypted with Vault Transit, into a bounded cache that keeps signing while the database or Vault is down.

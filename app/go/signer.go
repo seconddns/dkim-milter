@@ -18,15 +18,6 @@ import (
 // lookupTimeout bounds one key lookup: a database query and a Vault decrypt.
 const lookupTimeout = 10 * time.Second
 
-// signedHeaders are the fields signed; From is listed twice so that a From
-// added after signing breaks the signature (oversigning).
-var signedHeaders = []string{
-	"From", "From", "Reply-To", "Subject", "Date", "To", "Cc",
-	"Message-ID", "In-Reply-To", "References", "MIME-Version",
-	"Content-Type", "Content-Transfer-Encoding",
-	"List-Id", "List-Unsubscribe", "List-Unsubscribe-Post",
-}
-
 // session signs one message as it streams: the signer is made at the end of
 // the headers and the body goes straight into it, so no body is held.
 type session struct {
@@ -37,7 +28,9 @@ type session struct {
 	signDomain string
 	// hopsBefore is SIGN_HOPS_BEFORE: Received fields every message brings.
 	hopsBefore int
-	headers    bytes.Buffer
+	// policy is which fields are signed and how; nil is the default.
+	policy  *headerPolicy
+	headers bytes.Buffer
 	// received counts the Received fields the message came with. Postfix
 	// does not pass the one it adds itself.
 	received int
@@ -161,7 +154,7 @@ func (s *session) Headers(_ textproto.MIMEHeader, m *milter.Modifier) (milter.Re
 		log.Info("dkim: not signed, no key for the domain")
 		return milter.RespAccept, nil
 	}
-	sg, err := newMessageSigner(k, s.headers.Bytes())
+	sg, err := newMessageSigner(k, s.policy, s.headers.Bytes())
 	if err != nil {
 		signResults.WithLabelValues("error").Inc()
 		log.Error("dkim: not signed", "err", err)
@@ -213,15 +206,19 @@ func (s *session) Abort(*milter.Modifier) error {
 	return nil
 }
 
-// newMessageSigner starts a signature over the given header block.
-func newMessageSigner(k key, headers []byte) (*dkim.Signer, error) {
+// newMessageSigner starts a signature over the given header block; a nil
+// policy is the default one.
+func newMessageSigner(k key, p *headerPolicy, headers []byte) (*dkim.Signer, error) {
+	if p == nil {
+		p = defaultPolicy()
+	}
 	sg, err := dkim.NewSigner(&dkim.SignOptions{
 		Domain:                 k.domain,
 		Selector:               k.selector,
 		Signer:                 k.signer,
-		HeaderCanonicalization: dkim.CanonicalizationRelaxed,
-		BodyCanonicalization:   dkim.CanonicalizationSimple,
-		HeaderKeys:             signedHeaders,
+		HeaderCanonicalization: p.headerCano,
+		BodyCanonicalization:   p.bodyCano,
+		HeaderKeys:             p.keys(headers),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("dkim: signer: %w", err)
@@ -256,7 +253,12 @@ func finishSignature(sg *dkim.Signer, writeErr error) (string, error) {
 
 // sign returns the DKIM-Signature field value for a whole message.
 func sign(k key, headers, body []byte) (string, error) {
-	sg, err := newMessageSigner(k, headers)
+	return signWith(k, nil, headers, body)
+}
+
+// signWith signs a whole message under p.
+func signWith(k key, p *headerPolicy, headers, body []byte) (string, error) {
+	sg, err := newMessageSigner(k, p, headers)
 	if err != nil {
 		return "", err
 	}

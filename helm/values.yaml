@@ -72,6 +72,27 @@ signDomain: ""
 # raises it by one.
 signHopsBefore: 0
 
+# Which header fields the signature covers, as comma-separated names. A list
+# with * is a change to the standard list (+Name adds, -Name removes); one
+# without * replaces it. Names are compared without case. A field is signed
+# only when the message has it, once per time it is there. From is always
+# signed and guarded, whatever these say.
+# The standard list (*): From, Reply-To, Subject, Date, To, Cc, Resent-Date,
+# Resent-From, Resent-Sender, Resent-To, Resent-Cc, In-Reply-To, References,
+# List-Id, List-Help, List-Unsubscribe, List-Subscribe, List-Post, List-Owner,
+# List-Archive.
+signHeaders: "*,+Message-ID,+MIME-Version,+Content-Type,+Content-Transfer-Encoding"
+# Never signed; wins over signHeaders. The standard list (*): Return-Path,
+# Received, Comments, Keywords, Bcc, Resent-Bcc, DKIM-Signature.
+omitHeaders: "*"
+# Listed in h= once more than the message has them, once when it has none,
+# so a field of this list added after signing breaks the signature. Each must
+# be signed. Empty: From only.
+oversignHeaders: "From"
+# header/body, each relaxed or simple; a lone word sets the header, the body
+# is then simple.
+canonicalization: "relaxed/simple"
+
 # vault: the column holds Vault Transit ciphertext; none: the column holds PEM.
 keyDecrypt: vault
 

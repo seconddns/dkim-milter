@@ -2,12 +2,7 @@
 # relay runs the milter. Keys in the PostgreSQL table dkim (database dkim in
 # namespace db), private keys as Vault Transit ciphertext. The DSN Secret
 # dkim-milter-db comes from Vault through the ExternalSecret in k8s_eso.
-# The sandbox runs what develop built last.
-image:
-  repository: ghcr.io/yarilomail/dkim-milter
-  tag: "develop"
-  pullPolicy: Always
-
+# Image: the chart's release from Docker Hub, as in production.
 # Two, as opendkim ran: Postfix accepts mail when the milter is unreachable
 # (milter_default_action = accept), so a lone pod restarting means unsigned mail.
 replicaCount: 2

@@ -1,0 +1,28 @@
+# SecondDNS production: dkim-milter for the relay (seconddns/k8s_relay) in
+# namespace relay. Applied once by hand: kubectl apply -f argocd-app-seconddns.yaml
+# Before the first sync: the dkim database and table, the Vault Transit key
+# dkim with its role dkim-milter, and the ExternalSecret dkim-milter-db
+# (seconddns/k8s_eso) must exist.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dkim-milter
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/seconddns/dkim-milter.git
+    targetRevision: seconddns-patches
+    path: helm
+    helm:
+      valueFiles:
+        - ../helm_values/values-seconddns.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: relay
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

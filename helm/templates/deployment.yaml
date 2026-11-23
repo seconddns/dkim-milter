@@ -70,6 +70,14 @@ spec:
             {{- end }}
             - name: SIGN_HOPS_BEFORE
               value: {{ .Values.signHopsBefore | quote }}
+            - name: SIGN_HEADERS
+              value: {{ .Values.signHeaders | quote }}
+            - name: OMIT_HEADERS
+              value: {{ .Values.omitHeaders | quote }}
+            - name: OVERSIGN_HEADERS
+              value: {{ .Values.oversignHeaders | quote }}
+            - name: CANONICALIZATION
+              value: {{ .Values.canonicalization | quote }}
             - name: KEY_DECRYPT
               value: {{ .Values.keyDecrypt | quote }}
             - name: KEY_CACHE_SIZE

@@ -29,7 +29,7 @@ Everything about running it is on [doc.yarilomail.org](https://doc.yarilomail.or
 |:---|:---|
 | `app/go` | the milter, Go 1.27, `go test ./...` |
 | `helm` | the chart |
-| `helm_values` | values for the yarilo stand and keptemail |
+| `helm_values` | values for the yarilo stand, keptemail and SecondDNS |
 | `schema` | the `dkim` table for PostgreSQL and MySQL |
 
 ## Development and release
